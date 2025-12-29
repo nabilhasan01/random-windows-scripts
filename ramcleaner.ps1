@@ -3,6 +3,7 @@
 #####################################################
 
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $scriptUrl = "https://raw.githubusercontent.com/nabilhasan01/random-windows-scripts/refs/heads/main/ramcleaner.ps1"
 
@@ -97,7 +98,7 @@ $taskPath = "\"
 $description = "Rammap Auto Cleaner by Ghos1y"
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbsPath`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn
-$principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance –ClassName Win32_ComputerSystem).UserName -RunLevel Highest
+$principal = New-ScheduledTaskPrincipal -UserId $currentUser -RunLevel Highest
 
 try {
     Register-ScheduledTask -TaskName $taskName -TaskPath $taskPath -Description $description -Action $action -Trigger $trigger -Principal $principal -Force | Out-Null
