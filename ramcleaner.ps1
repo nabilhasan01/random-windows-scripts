@@ -1,6 +1,6 @@
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-$scriptUrl = 
+$scriptUrl = "https://raw.githubusercontent.com/nabilhasan01/random-windows-scripts/refs/heads/main/ramcleaner.ps1"
 
 if (-not $isAdmin) {
     Write-Host "Requesting Administrative privileges..." -ForegroundColor Yellow
