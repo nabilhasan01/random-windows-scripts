@@ -73,7 +73,7 @@ while ($true) {
 '@
 
 $vbsContent = "Set WshShell = CreateObject(`"WScript.Shell`")`r`n" + `
-              "WshShell.Run `"powershell.exe -ExecutionPolicy Bypass -File `"$autoScriptPath`"`", 0, False"
+              "WshShell.Run `"powershell.exe -ExecutionPolicy Bypass -File `"`"$autoScriptPath`"`" `", 0, False"
 
 try {
     if (-not (Test-Path $autoScriptDir)) {
