@@ -63,9 +63,10 @@ $notify.Visible = $true
 $notify.ShowBalloonTip(5000)
 
 $notify.BalloonTipText = "Ram Cleared"
+$interval = 1800
 
 while ($true) {
-    Start-Sleep -Seconds 7200
+    Start-Sleep -Seconds $interval
     # Uses the -Ew flag to empty working sets
     rammap -Ew
     $notify.ShowBalloonTip(3000)
