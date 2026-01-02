@@ -69,7 +69,7 @@ while ($true) {
     Start-Sleep -Seconds $interval
     # Uses the -Ew flag to empty working sets
     rammap -Ew
-    $notify.ShowBalloonTip(3000)
+    $notify.ShowBalloonTip(2500)
 }
 '@
 
