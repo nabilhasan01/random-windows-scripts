@@ -61,26 +61,45 @@ if (!$mutex.WaitOne(0, $false)) {
     exit
 }
 
+sleep -Seconds 30
+rammap -Ew
+
 Add-Type -AssemblyName System.Windows.Forms
 $notify = New-Object System.Windows.Forms.NotifyIcon
 $notify.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Get-Process -Id $PID).Path)
 $notify.BalloonTipTitle = "RamMap Auto-Cleaner"
 $notify.BalloonTipText = "Background Ram Auto-Cleaner Initialized"
 $notify.Visible = $true
-$notify.ShowBalloonTip(5000)
+$notify.ShowBalloonTip(3000)
 
-$notify.BalloonTipText = "Ram Cleared"
-$interval = 1800
+$ramThreshold = 75
+$safetyInterval = 5400
+$lastRunTime = Get-Date
 
 try {
     while ($true) {
-        Start-Sleep -Seconds $interval
-        rammap -Ew
-        $notify.ShowBalloonTip(2500)
+        $sleepTime = Get-Random -Minimum 30 -Maximum 90
+        Start-Sleep -Seconds $sleepTime
+
+        $osInfo = Get-CimInstance Win32_OperatingSystem
+        $totalMem = $osInfo.TotalVisibleMemorySize
+        $freeMem = $osInfo.FreePhysicalMemory
+        $usedPercent = [math]::Round((($totalMem - $freeMem) / $totalMem) * 100, 1)
+
+        $timeSinceLastRun = (Get-Date) - $lastRunTime
+
+        if ($usedPercent -gt $ramThreshold -or $timeSinceLastRun.TotalSeconds -ge $safetyInterval) {
+            
+            rammap -Ew
+            $lastRunTime = Get-Date
+
+            $reason = if ($usedPercent -gt $ramThreshold) { "High RAM ($usedPercent%)" } else { "Scheduled Safety Clean" }
+            $notify.BalloonTipText = "RAM Cleared - Trigger: $reason"
+            $notify.ShowBalloonTip(1200)
+        }
     }
 }
 finally {
-    # Release Mutex if script ends gracefully (optional, OS handles this on process death)
     $mutex.ReleaseMutex()
     $notify.Dispose()
 }
