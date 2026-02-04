@@ -54,6 +54,13 @@ $autoScriptPath = Join-Path $autoScriptDir "ram_auto_cleaner.ps1"
 $vbsPath = Join-Path $autoScriptDir "silent-script-runner.vbs"
 
 $psContent = @'
+$mutexName = "Global\RamMapAutoCleaner_UniqueId_99"
+$mutex = New-Object System.Threading.Mutex($false, $mutexName)
+
+if (!$mutex.WaitOne(0, $false)) {
+    exit
+}
+
 Add-Type -AssemblyName System.Windows.Forms
 $notify = New-Object System.Windows.Forms.NotifyIcon
 $notify.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Get-Process -Id $PID).Path)
@@ -65,11 +72,17 @@ $notify.ShowBalloonTip(5000)
 $notify.BalloonTipText = "Ram Cleared"
 $interval = 1800
 
-while ($true) {
-    Start-Sleep -Seconds $interval
-    # Uses the -Ew flag to empty working sets
-    rammap -Ew
-    $notify.ShowBalloonTip(2500)
+try {
+    while ($true) {
+        Start-Sleep -Seconds $interval
+        rammap -Ew
+        $notify.ShowBalloonTip(2500)
+    }
+}
+finally {
+    # Release Mutex if script ends gracefully (optional, OS handles this on process death)
+    $mutex.ReleaseMutex()
+    $notify.Dispose()
 }
 '@
 
@@ -88,6 +101,30 @@ try {
 }
 catch {
     Write-Error "Failed to save background scripts: $($_.Exception.Message)"
+}
+
+#######################################################
+#              Clean Old Instances                    #
+#######################################################
+
+Write-Host "Checking for existing background instances..." -ForegroundColor Cyan
+
+$existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+if ($existingTask) {
+    Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+}
+
+$runningScripts = Get-CimInstance Win32_Process | Where-Object { 
+    $_.Name -eq 'powershell.exe' -and $_.CommandLine -like "*$autoScriptPath*" 
+}
+
+foreach ($proc in $runningScripts) {
+    try {
+        Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+        Write-Host "Stopped old instance (PID: $($proc.ProcessId))" -ForegroundColor Yellow
+    } catch {
+        Write-Warning "Could not stop process $($proc.ProcessId)"
+    }
 }
 
 ####################################################
