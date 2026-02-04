@@ -24,7 +24,11 @@ try {
     }
 
     Invoke-RestMethod -Uri $url -OutFile $zipFile
+    
+    Get-Process -Name "RAMMap" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Seconds 1
     Expand-Archive -Path $zipFile -DestinationPath $destDir -Force
+
     Remove-Item -Path $zipFile -Force
     
     $pathList = $Path -split ";"
@@ -79,7 +83,10 @@ $lastRunTime = Get-Date
 try {
     while ($true) {
         $sleepTime = Get-Random -Minimum 30 -Maximum 90
-        Start-Sleep -Seconds $sleepTime
+        for ($i = 0; $i -lt $sleepTime; $i++) {
+            [System.Windows.Forms.Application]::DoEvents()
+            Start-Sleep -Seconds 1
+        }
 
         $osInfo = Get-CimInstance Win32_OperatingSystem
         $totalMem = $osInfo.TotalVisibleMemorySize
@@ -89,7 +96,6 @@ try {
         $timeSinceLastRun = (Get-Date) - $lastRunTime
 
         if ($usedPercent -gt $ramThreshold -or $timeSinceLastRun.TotalSeconds -ge $safetyInterval) {
-            
             rammap -Ew
             $lastRunTime = Get-Date
 
@@ -97,6 +103,7 @@ try {
             $notify.BalloonTipText = "RAM Cleared - Trigger: $reason"
             $notify.ShowBalloonTip(1200)
         }
+        [System.Windows.Forms.Application]::DoEvents()
     }
 }
 finally {
