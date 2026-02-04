@@ -107,6 +107,7 @@ catch {
 #              Clean Old Instances                    #
 #######################################################
 
+$taskName = "Ram Auto Cleaner"
 Write-Host "Checking for existing background instances..." -ForegroundColor Cyan
 
 $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
@@ -131,7 +132,6 @@ foreach ($proc in $runningScripts) {
 #               Task Scheduler Logic               #
 ####################################################
 
-$taskName = "Ram Auto Cleaner"
 $taskPath = "\"
 $description = "Rammap Auto Cleaner by Ghos1y"
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbsPath`""
