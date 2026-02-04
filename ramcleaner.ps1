@@ -65,9 +65,6 @@ if (!$mutex.WaitOne(0, $false)) {
     exit
 }
 
-sleep -Seconds 30
-rammap -Ew
-
 Add-Type -AssemblyName System.Windows.Forms
 $notify = New-Object System.Windows.Forms.NotifyIcon
 $notify.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Get-Process -Id $PID).Path)
@@ -75,6 +72,9 @@ $notify.BalloonTipTitle = "RamMap Auto-Cleaner"
 $notify.BalloonTipText = "Background Ram Auto-Cleaner Initialized"
 $notify.Visible = $true
 $notify.ShowBalloonTip(3000)
+
+sleep -Seconds 30
+rammap -Ew
 
 $ramThreshold = 75
 $safetyInterval = 5400
