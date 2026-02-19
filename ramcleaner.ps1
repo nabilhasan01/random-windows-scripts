@@ -79,10 +79,17 @@ rammap -Ew
 $ramThreshold = 75
 $safetyInterval = 5400
 $lastRunTime = Get-Date
+$justCleaned = $false
 
 try {
     while ($true) {
-        $sleepTime = Get-Random -Minimum 30 -Maximum 90
+        if ($justCleaned) {
+            $sleepTime = 600
+            $justCleaned = $false
+        } else {
+            $sleepTime = Get-Random -Minimum 30 -Maximum 90
+        }
+
         for ($i = 0; $i -lt $sleepTime; $i++) {
             [System.Windows.Forms.Application]::DoEvents()
             Start-Sleep -Seconds 1
@@ -98,6 +105,7 @@ try {
         if ($usedPercent -gt $ramThreshold -or $timeSinceLastRun.TotalSeconds -ge $safetyInterval) {
             rammap -Ew
             $lastRunTime = Get-Date
+            $justCleaned = $true
 
             $reason = if ($usedPercent -gt $ramThreshold) { "High RAM ($usedPercent%)" } else { "Scheduled Safety Clean" }
             $notify.BalloonTipText = "RAM Cleared - Trigger: $reason"
