@@ -68,37 +68,25 @@ $SteamVersions = @(
 
 if (-not $ATS) {
     Write-Host "No ATS parameter provided. Please select a version..." -ForegroundColor Cyan
-    try {
-        # Try to use Out-GridView for a nice UI picker
-        $selected = $SteamVersions | Out-GridView -Title "Select a Steam Version to Downgrade To" -OutputMode Single -ErrorAction Stop
-        if ($selected) {
-            $ATS = $selected.Date
-        } else {
-            Write-Host "No version selected. Exiting..." -ForegroundColor Yellow
-            exit
+    Write-Host ""
+    Write-Host "Available versions:" -ForegroundColor Cyan
+    for ($i = 0; $i -lt $SteamVersions.Count; $i++) {
+        Write-Host ("[{0:D2}] {1} - {2}" -f ($i+1), $SteamVersions[$i].Date, $SteamVersions[$i].Notes)
+    }
+    Write-Host ""
+    $userInput = Read-Host "Enter the number of the version you want (1-$($SteamVersions.Count)), or paste a full timestamp"
+    if ($userInput -match '^\d{1,2}$') {
+        $index = [int]$userInput - 1
+        if ($index -ge 0 -and $index -lt $SteamVersions.Count) {
+            $ATS = $SteamVersions[$index].Date
         }
-    } catch {
-        # Fallback to text prompt if Out-GridView is unavailable
-        Write-Host ""
-        Write-Host "Available versions:" -ForegroundColor Cyan
-        for ($i = 0; $i -lt $SteamVersions.Count; $i++) {
-            Write-Host ("[{0:D2}] {1} - {2}" -f ($i+1), $SteamVersions[$i].Date, $SteamVersions[$i].Notes)
-        }
-        Write-Host ""
-        $userInput = Read-Host "Enter the number of the version you want (1-$($SteamVersions.Count)), or paste a full timestamp"
-        if ($userInput -match '^\d{1,2}$') {
-            $index = [int]$userInput - 1
-            if ($index -ge 0 -and $index -lt $SteamVersions.Count) {
-                $ATS = $SteamVersions[$index].Date
-            }
-        } elseif ($userInput -match '^\d{14}$') {
-            $ATS = $userInput
-        }
-        
-        if (-not $ATS) {
-            Write-Host "Invalid selection. Exiting..." -ForegroundColor Red
-            exit
-        }
+    } elseif ($userInput -match '^\d{14}$') {
+        $ATS = $userInput
+    }
+    
+    if (-not $ATS) {
+        Write-Host "Invalid selection. Exiting..." -ForegroundColor Red
+        exit
     }
 }
 
